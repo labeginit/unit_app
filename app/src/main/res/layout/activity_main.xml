@@ -55,12 +55,20 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/DeviceLayout"
+
+
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#4A4949"
-        android:orientation="vertical" />
+        android:background="#757C8C">
+
+        <LinearLayout
+            android:id="@+id/DeviceLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#4A4949"
+            android:orientation="vertical"  />
+    </ScrollView>
 
 
 </LinearLayout>
