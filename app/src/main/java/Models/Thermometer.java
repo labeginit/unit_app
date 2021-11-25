@@ -2,27 +2,35 @@ package Models;
 
 public class Thermometer {
 
-    private String deviceID;
-    private double temperature;
+    private String _id;
+    private double status; // Status is temperature
 
-    public Thermometer(String deviceID, double temperature) {
-        this.deviceID = deviceID;
-        this.temperature = temperature;
+    public Thermometer(String _id, double status) {
+        this._id = _id;
+        this.status = status;
     }
 
-    public String getDeviceID() {
-        return deviceID;
+    public String get_id() {
+        return _id;
     }
 
-    public double getTemperature() {
-        return temperature;
+    public double getStatus() {
+        return status;
     }
 
-    public void setDeviceID(String deviceID) {
-        this.deviceID = deviceID;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
-    public void setTemperature(double temperature) {
-        this.temperature = temperature;
+    public void setStatus(double status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Thermometer{" +
+                "_id='" + _id + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

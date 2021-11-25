@@ -1,28 +1,36 @@
 package Models;
 
-public class Curtain {
+public class Curtain { // Class is probably redundant, as we are not going to have curtains in the smarthouse
 
-    private String deviceID;
-    private boolean open;
+    private String _id;
+    private boolean status;
 
-    public Curtain(String deviceID, boolean open) {
-        this.deviceID = deviceID;
-        this.open = open;
+    public Curtain(String _id, boolean status) {
+        this._id = _id;
+        this.status = status;
     }
 
-    public String getDeviceID() {
-        return deviceID;
+    public String get_id() {
+        return _id;
     }
 
-    public boolean isOpen() {
-        return open;
+    public boolean isStatus() {
+        return status;
     }
 
-    public void setDeviceID(String deviceID) {
-        this.deviceID = deviceID;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
-    public void setOpen(boolean open) {
-        this.open = open;
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Curtain{" +
+                "_id='" + _id + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

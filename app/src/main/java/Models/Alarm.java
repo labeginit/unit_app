@@ -25,4 +25,12 @@ public class Alarm {
     public void setStatus(boolean status) {
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        return "Alarm{" +
+                "_id='" + _id + '\'' +
+                ", status=" + status +
+                '}';
+    }
 }

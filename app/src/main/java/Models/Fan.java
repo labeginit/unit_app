@@ -2,27 +2,35 @@ package Models;
 
 public class Fan {
 
-    private String deviceID;
-    private int speed;
+    private String _id;
+    private int status; // Status is the speed setting on the fan
 
-    public Fan(String deviceID, int speed) {
-        this.deviceID = deviceID;
-        this.speed = speed;
+    public Fan(String _id, int status) {
+        this._id = _id;
+        this.status = status;
     }
 
-    public String getDeviceID() {
-        return deviceID;
+    public String get_id() {
+        return _id;
     }
 
-    public int getSpeed() {
-        return speed;
+    public int getStatus() {
+        return status;
     }
 
-    public void setDeviceID(String deviceID) {
-        this.deviceID = deviceID;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
-    public void setSpeed(int speed) {
-        this.speed = speed;
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Fan{" +
+                "_id='" + _id + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

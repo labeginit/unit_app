@@ -2,35 +2,35 @@ package Models;
 
 public class Lamp {
 
-    private String deviceID;
-    private boolean on;
+    private String _id;
+    private boolean status;
 
-    public Lamp(String deviceID, boolean on) {
-        this.deviceID = deviceID;
-        this.on = on;
+    public Lamp(String _id, boolean status) {
+        this._id = _id;
+        this.status = status;
     }
 
-    public String getDeviceID() {
-        return deviceID;
+    public String get_id() {
+        return _id;
     }
 
-    public boolean isOn() {
-        return on;
+    public boolean isStatus() {
+        return status;
     }
 
-    public void setDeviceID(String deviceID) {
-        this.deviceID = deviceID;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
-    public void setOn(boolean on) {
-        this.on = on;
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 
     @Override
     public String toString() {
         return "Lamp{" +
-                "name='" + deviceID + '\'' +
-                ", on=" + on +
+                "_id='" + _id + '\'' +
+                ", status=" + status +
                 '}';
     }
 }

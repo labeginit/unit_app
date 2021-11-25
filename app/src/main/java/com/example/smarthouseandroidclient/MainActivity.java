@@ -2,7 +2,6 @@ package com.example.smarthouseandroidclient;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Application;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,7 +15,6 @@ import tech.gusavila92.websocketclient.WebSocketClient;
 
 import com.google.android.material.slider.Slider;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -72,20 +70,20 @@ public class MainActivity extends AppCompatActivity {
         ImageView lampRowImage = (ImageView) lampRow.findViewById(R.id.lampRowImage);
         TextView lampRowName = (TextView) lampRow.findViewById(R.id.lampRowName);
         Button lampRowButton = (Button) lampRow.findViewById(R.id.lampRowButton);
-        buttons.put(lamp.getDeviceID(), lampRowButton);
-        lampRowName.setText(lamp.getDeviceID());
-        if (lamp.isOn()) {
+        buttons.put(lamp.get_id(), lampRowButton);
+        lampRowName.setText(lamp.get_id());
+        if (lamp.isStatus()) {
             lampRowButton.setText("ON");
-        } else if (!lamp.isOn()) {
+        } else if (!lamp.isStatus()) {
             lampRowButton.setText("OFF");
         }
         lampRowButton.setOnClickListener(v -> {
             if (lampRowButton.getText().equals("ON")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.getDeviceID() + "', 'on':'false'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.getDeviceID() + "', 'on':'false'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'false'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'false'}");
             } else if (lampRowButton.getText().equals("OFF")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.getDeviceID() + "', 'on':'true'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.getDeviceID() + "', 'on':'true'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'true'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'true'}");
             }
         });
         deviceLayout.addView(lampRow);
@@ -98,12 +96,12 @@ public class MainActivity extends AppCompatActivity {
         TextView fanRowName = (TextView) fanRow.findViewById(R.id.fanRowName);
         Slider fanSlider = (Slider) fanRow.findViewById(R.id.fanSpeedSlider);
         fanSliderGlobal = fanSlider;
-        fanRowName.setText(fan.getDeviceID());
-        fanSlider.setValue(fan.getSpeed());
+        fanRowName.setText(fan.get_id());
+        fanSlider.setValue(fan.getStatus());
 
         fanSlider.addOnChangeListener((slider, value, fromUser) -> {
-            Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + fan.getDeviceID() + "', 'speed':'" + value + "'}");
-            webSocketClient.send("changeDeviceStatus={'_id':'" + fan.getDeviceID() + "', 'speed':'" + (int) value + "'}");
+            Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + fan.get_id() + "', 'speed':'" + value + "'}");
+            webSocketClient.send("changeDeviceStatus={'_id':'" + fan.get_id() + "', 'speed':'" + (int) value + "'}");
 
         });
 
@@ -116,20 +114,20 @@ public class MainActivity extends AppCompatActivity {
         ImageView curtainRowImage = (ImageView) curtainRow.findViewById(R.id.curtainRowImage);
         TextView curtainRowName = (TextView) curtainRow.findViewById(R.id.curtainRowName);
         Button curtainRowButton = (Button) curtainRow.findViewById(R.id.curtainRowButton);
-        buttons.put(curtain.getDeviceID(), curtainRowButton);
-        curtainRowName.setText(curtain.getDeviceID());
-        if (curtain.isOpen()) {
+        buttons.put(curtain.get_id(), curtainRowButton);
+        curtainRowName.setText(curtain.get_id());
+        if (curtain.isStatus()) {
             curtainRowButton.setText("OPEN");
         } else {
             curtainRowButton.setText("CLOSED");
         }
         curtainRowButton.setOnClickListener(v -> {
             if (curtainRowButton.getText().equals("OPEN")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.getDeviceID() + "', 'open':'" + false + "'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.getDeviceID() + "', 'open':'" + false + "'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + false + "'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + false + "'}");
             } else if (curtainRowButton.getText().equals("CLOSED")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.getDeviceID() + "', 'open':'" + true + "'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.getDeviceID() + "', 'open':'" + true + "'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + true + "'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + true + "'}");
             }
         });
         deviceLayout.addView(curtainRow);
@@ -141,8 +139,8 @@ public class MainActivity extends AppCompatActivity {
         ImageView temperatureRowImage = (ImageView) temperatureSensorRow.findViewById(R.id.temperatureSensorImage);
         TextView temperatureSensorName = (TextView) temperatureSensorRow.findViewById(R.id.temperatureSensorName);
         TextView temperatureSensorTemperature = (TextView) temperatureSensorRow.findViewById(R.id.temperature);
-        temperatureSensorName.setText(thermometer.getDeviceID());
-        temperatureSensorTemperature.setText(Double.toString(thermometer.getTemperature()));
+        temperatureSensorName.setText(thermometer.get_id());
+        temperatureSensorTemperature.setText(Double.toString(thermometer.getStatus()));
 
         deviceLayout.addView(temperatureSensorRow);
     }
