@@ -10,6 +10,15 @@ public class SmartHouse {
     ArrayList<Fan> fanList;
     ArrayList<Curtain> curtainList;
     ArrayList<Thermometer> temperatureSensorList;
+    ArrayList<Alarm> alarmList;
+
+    public void clear() {
+        lampList.clear();
+        fanList.clear();
+        curtainList.clear();
+        temperatureSensorList.clear();
+        alarmList.clear();
+    }
 
 
     private SmartHouse() {
@@ -17,6 +26,7 @@ public class SmartHouse {
         fanList = new ArrayList<>();
         curtainList = new ArrayList<>();
         temperatureSensorList = new ArrayList<>();
+        alarmList = new ArrayList<>();
     }
 
     public static SmartHouse getInstance() {
@@ -42,6 +52,8 @@ public class SmartHouse {
         return temperatureSensorList;
     }
 
+    public ArrayList<Alarm> getAlarmList(){ return alarmList; }
+
     public void addLamp(Lamp lamp) {
         this.lampList.add(lamp);
     }
@@ -54,17 +66,18 @@ public class SmartHouse {
         this.curtainList.add(curtain);
     }
 
-    public void addTemperatureSensor(Thermometer thermometer) {
-        this.temperatureSensorList.add(thermometer);
-    }
+    public void addTemperatureSensor(Thermometer temperatureSensor) { this.temperatureSensorList.add(temperatureSensor); }
+
+    public void addAlarm(Alarm alarm){ this.alarmList.add(alarm); }
 
     @Override
     public String toString() {
         return "SmartHouse{" +
                 "lampList=" + lampList.toString() +
-                ", fanList=" + fanList.size() +
-                ", curtainList=" + curtainList.size() +
-                ", thermometerList=" + temperatureSensorList.size() +
+                ", fanList=" + fanList +
+                ", curtainList=" + curtainList +
+                ", temperatureSensorList=" + temperatureSensorList +
+                ", alarmList=" + alarmList +
                 '}';
     }
 }
