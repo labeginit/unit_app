@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import Models.Alarm;
 import tech.gusavila92.websocketclient.WebSocketClient;
 
 import com.google.android.material.slider.Slider;
@@ -61,6 +62,10 @@ public class MainActivity extends AppCompatActivity {
             for (Thermometer thermometer : smartHouse.getTemperatureSensorList()) {
                 inflateTemperatureSensorDevice(thermometer);
             }
+
+            for (Alarm alarm : smartHouse.getAlarmList()) {
+                inflateAlarmDevice(alarm);
+            }
         }
     }
 
@@ -79,11 +84,11 @@ public class MainActivity extends AppCompatActivity {
         }
         lampRowButton.setOnClickListener(v -> {
             if (lampRowButton.getText().equals("ON")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'false'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'false'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'status':'false'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'status':'false'}");
             } else if (lampRowButton.getText().equals("OFF")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'true'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'on':'true'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'status':'true'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'status':'true'}");
             }
         });
         deviceLayout.addView(lampRow);
@@ -100,8 +105,8 @@ public class MainActivity extends AppCompatActivity {
         fanSlider.setValue(fan.getStatus());
 
         fanSlider.addOnChangeListener((slider, value, fromUser) -> {
-            Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + fan.get_id() + "', 'speed':'" + value + "'}");
-            webSocketClient.send("changeDeviceStatus={'_id':'" + fan.get_id() + "', 'speed':'" + (int) value + "'}");
+            Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + fan.get_id() + "', 'status':'" + value + "'}");
+            webSocketClient.send("changeDeviceStatus={'_id':'" + fan.get_id() + "', 'status':'" + (int) value + "'}");
 
         });
 
@@ -123,11 +128,11 @@ public class MainActivity extends AppCompatActivity {
         }
         curtainRowButton.setOnClickListener(v -> {
             if (curtainRowButton.getText().equals("OPEN")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + false + "'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + false + "'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'status':'" + false + "'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'status':'" + false + "'}");
             } else if (curtainRowButton.getText().equals("CLOSED")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + true + "'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'open':'" + true + "'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'status':'" + true + "'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'status':'" + true + "'}");
             }
         });
         deviceLayout.addView(curtainRow);
@@ -143,6 +148,31 @@ public class MainActivity extends AppCompatActivity {
         temperatureSensorTemperature.setText(Double.toString(thermometer.getStatus()));
 
         deviceLayout.addView(temperatureSensorRow);
+    }
+
+    private void inflateAlarmDevice(Alarm alarm) {
+        View alarmRow = getLayoutInflater().inflate(R.layout.alarm_row, null, false);
+
+        ImageView alarmRowImage = (ImageView) alarmRow.findViewById(R.id.alarmRowImage);
+        TextView alarmRowName = (TextView) alarmRow.findViewById(R.id.alarmRowName);
+        Button alarmRowButton = (Button) alarmRow.findViewById(R.id.alarmRowButton);
+        buttons.put(alarm.get_id(), alarmRowButton);
+        alarmRowName.setText(alarm.get_id());
+        if (alarm.isStatus()) {
+            alarmRowButton.setText("ON");
+        } else if (!alarm.isStatus()) {
+            alarmRowButton.setText("OFF");
+        }
+        alarmRowButton.setOnClickListener(v -> {
+            if (alarmRowButton.getText().equals("ON")) {
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'false'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'false'}");
+            } else if (alarmRowButton.getText().equals("OFF")) {
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'true'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'true'}");
+            }
+        });
+        deviceLayout.addView(alarmRow);
     }
 
     private void createWebSocketClient() {
@@ -194,6 +224,8 @@ public class MainActivity extends AppCompatActivity {
                                    updateCurtainInGUI(jsonObject);
                                 } else if (jsonObject.get("device").toString().equals("fan")) {
                                    updateFanInGUI(jsonObject);
+                                } else if (jsonObject.get("device").toString().equals("alarm")) {
+                                    updateAlarmInGUI(jsonObject);
                                 }
                             } else {
                                 runOnUiThread(() -> {
@@ -270,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {   // Display the message by using the GUI thread
                 buttons.get(curtainID).setText("OPEN");
             });
-        } else if (!newCurtainStatus) { // New lamp status is false
+        } else if (!newCurtainStatus) { // New status is false
             runOnUiThread(() -> {
                 buttons.get(curtainID).setText("CLOSED");
             });
@@ -285,6 +317,22 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             fanSliderGlobal.setValue(newFanSpeed);
         });
+    }
+    // TODO updateAlarmInGUI isn't tested as server isn't broadcasting at the time of implementation
+    private void updateAlarmInGUI(JSONObject jsonObject) throws JSONException {
+        String alarmID = jsonObject.get("_id").toString();
+        boolean newAlarmStatus = Boolean.parseBoolean(jsonObject.get("option").toString());
+        Log.d("Websocket", "Alarm name: " + alarmID + " " + "New status: " + newAlarmStatus);
+
+        if (newAlarmStatus) { // true
+            runOnUiThread(() -> {   // Display the message by using the GUI thread
+                buttons.get(alarmID).setText("ON");
+            });
+        } else if (!newAlarmStatus) { // false
+            runOnUiThread(() -> {   // Display the message by using the GUI thread
+                buttons.get(alarmID).setText("OFF");
+            });
+        }
     }
 
 }

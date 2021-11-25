@@ -73,7 +73,7 @@ public class SmartHouse {
     @Override
     public String toString() {
         return "SmartHouse{" +
-                "lampList=" + lampList.toString() +
+                "lampList=" + lampList +
                 ", fanList=" + fanList +
                 ", curtainList=" + curtainList +
                 ", temperatureSensorList=" + temperatureSensorList +
