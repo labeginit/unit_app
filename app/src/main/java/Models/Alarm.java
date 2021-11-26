@@ -3,18 +3,18 @@ package Models;
 public class Alarm {
 
     String _id;
-    boolean status;
+    int status; // 0 = OFF, 1 = ON, 2 = Alarm is going off
 
-    public Alarm(String deviceID, boolean on) {
+    public Alarm(String deviceID, int status) {
         _id = deviceID;
-        status = on;
+        this.status = status;
     }
 
     public String get_id() {
         return _id;
     }
 
-    public boolean isStatus() {
+    public int getStatus() {
         return status;
     }
 
@@ -22,7 +22,7 @@ public class Alarm {
         this._id = _id;
     }
 
-    public void setStatus(boolean status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 

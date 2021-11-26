@@ -1,7 +1,11 @@
 package com.example.smarthouseandroidclient;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -158,18 +162,18 @@ public class MainActivity extends AppCompatActivity {
         Button alarmRowButton = (Button) alarmRow.findViewById(R.id.alarmRowButton);
         buttons.put(alarm.get_id(), alarmRowButton);
         alarmRowName.setText(alarm.get_id());
-        if (alarm.isStatus()) {
-            alarmRowButton.setText("ON");
-        } else if (!alarm.isStatus()) {
+        if (alarm.getStatus() == 0) {
             alarmRowButton.setText("OFF");
+        } else if (alarm.getStatus() == 1 || alarm.getStatus() == 2) { // If the alarm is going off it must be ON in the first place
+            alarmRowButton.setText("ON");
         }
         alarmRowButton.setOnClickListener(v -> {
             if (alarmRowButton.getText().equals("ON")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'false'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'false'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':' " + 0 + "'}"); // If the alarm is ON we send 0 to turn it OFF
+                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 0 + "'}");
             } else if (alarmRowButton.getText().equals("OFF")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'true'}");
-                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'true'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 1 + "'}"); // If the alarm is OFF we send 1 to turn it ON
+                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 1 + "'}");
             }
         });
         deviceLayout.addView(alarmRow);
@@ -321,16 +325,38 @@ public class MainActivity extends AppCompatActivity {
     // TODO updateAlarmInGUI isn't tested as server isn't broadcasting at the time of implementation
     private void updateAlarmInGUI(JSONObject jsonObject) throws JSONException {
         String alarmID = jsonObject.get("_id").toString();
-        boolean newAlarmStatus = Boolean.parseBoolean(jsonObject.get("option").toString());
+        int newAlarmStatus = Integer.parseInt(jsonObject.get("option").toString()); // Read in the status sent from the server
         Log.d("Websocket", "Alarm name: " + alarmID + " " + "New status: " + newAlarmStatus);
 
-        if (newAlarmStatus) { // true
-            runOnUiThread(() -> {   // Display the message by using the GUI thread
-                buttons.get(alarmID).setText("ON");
-            });
-        } else if (!newAlarmStatus) { // false
+        if (newAlarmStatus == 0) { // The new status of the Alarm is OFF
             runOnUiThread(() -> {   // Display the message by using the GUI thread
                 buttons.get(alarmID).setText("OFF");
+            });
+        } else if (newAlarmStatus == 1) { // The new status of the Alarm is ON
+            runOnUiThread(() -> {
+                buttons.get(alarmID).setText("ON");
+            });
+            // TODO TEST BELOW CODE
+        } else if (newAlarmStatus == 2) { // We get information about the alarm being triggered
+            runOnUiThread(() -> {
+                new AlertDialog.Builder(getApplicationContext())
+                        .setTitle("Alarm triggered!")
+                        .setMessage("Would you like to call security?")
+
+                        .setPositiveButton(android.R.string.yes, (dialog, which) -> { // The user wants to call security
+                            webSocketClient.send("changeDeviceStatus={'_id':'" + alarmID + "', 'status':'" + 0 + "'}"); // The alarm is turned off, then security can be called
+                            Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarmID + "', 'status':'" + 0 + "'}");
+                            String phone = "+911"; // TODO Find a better number to call perhaps
+                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
+                            startActivity(intent);                        })
+
+                        .setNegativeButton(android.R.string.no, (dialog, which) -> { // The user doesn't want to call security
+                            webSocketClient.send("changeDeviceStatus={'_id':'" + alarmID + "', 'status':'" + 0 + "'}"); // The alarm is turned off.
+                            Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'\" + alarmID + \"', 'status':'\" + 0 + \"'}");
+                        })
+
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
             });
         }
     }
