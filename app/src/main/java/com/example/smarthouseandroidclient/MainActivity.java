@@ -46,7 +46,36 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (deviceLayout != null)
+        deviceLayout.removeAllViews();
         createWebSocketClient();
+        Log.d("Websocket", "Application resumed");
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d("Websocket", "Application destroyed");
+        super.onDestroy();
+        webSocketClient.close();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        webSocketClient.close();
+        Log.d("Websocket", "Application paused");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        webSocketClient.close();
+        Log.d("Websocket", "Application stopped");
     }
 
     private void inflateDevices() {
@@ -222,13 +251,15 @@ public class MainActivity extends AppCompatActivity {
                             jsonObject = new JSONObject(payload);
                             if (jsonObject.get("operation").toString().equals("success")) { // If the status has been successfully changed
                                 if (jsonObject.get("device").toString().equals("lamp")) { // A lamp has changed status
-                                   updateLampInGUI(jsonObject);
+                                    updateLampInGUI(jsonObject);
                                 } else if (jsonObject.get("device").toString().equals("curtain")) { // A curtain has changed status
-                                   updateCurtainInGUI(jsonObject);
+                                    updateCurtainInGUI(jsonObject);
                                 } else if (jsonObject.get("device").toString().equals("fan")) {
-                                   updateFanInGUI(jsonObject);
+                                    updateFanInGUI(jsonObject);
                                 } else if (jsonObject.get("device").toString().equals("alarm")) {
                                     updateAlarmInGUI(jsonObject);
+                                } else if (jsonObject.get("device").toString().equals("thermometer")) {
+                                    // TODO
                                 }
                             } else {
                                 runOnUiThread(() -> {
@@ -321,6 +352,7 @@ public class MainActivity extends AppCompatActivity {
             fanSliderGlobal.setValue(newFanSpeed);
         });
     }
+
     // TODO updateAlarmInGUI isn't tested as server isn't broadcasting at the time of implementation
     private void updateAlarmInGUI(JSONObject jsonObject) throws JSONException {
         String alarmID = jsonObject.get("_id").toString();
@@ -347,7 +379,8 @@ public class MainActivity extends AppCompatActivity {
                             Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarmID + "', 'status':'" + 0 + "'}");
                             String phone = "+911"; // TODO Find a better number to call perhaps
                             Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
-                            startActivity(intent);                        })
+                            startActivity(intent);
+                        })
 
                         .setNegativeButton(android.R.string.no, (dialog, which) -> { // The user doesn't want to call security
                             webSocketClient.send("changeDeviceStatus={'_id':'" + alarmID + "', 'status':'" + 0 + "'}"); // The alarm is turned off.
@@ -358,5 +391,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
 
 }
