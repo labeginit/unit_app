@@ -48,7 +48,7 @@ public class SmartHouse {
         return curtainList;
     }
 
-    public ArrayList<Thermometer> getTemperatureSensorList() {
+    public ArrayList<Thermometer> getThermometerList() {
         return temperatureSensorList;
     }
 
@@ -66,9 +66,21 @@ public class SmartHouse {
         this.curtainList.add(curtain);
     }
 
-    public void addTemperatureSensor(Thermometer temperatureSensor) { this.temperatureSensorList.add(temperatureSensor); }
+    public void addThermometer(Thermometer temperatureSensor) { this.temperatureSensorList.add(temperatureSensor); }
 
     public void addAlarm(Alarm alarm){ this.alarmList.add(alarm); }
+
+    public int getNumberOfDevices() {
+        int deviceTotal = 0;
+
+        deviceTotal += getLampList().size();
+        deviceTotal += getFanList().size();
+        deviceTotal += getCurtainList().size();
+        deviceTotal += getThermometerList().size();
+        deviceTotal += getAlarmList().size();
+
+        return deviceTotal;
+    }
 
     @Override
     public String toString() {

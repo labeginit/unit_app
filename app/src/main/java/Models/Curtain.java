@@ -14,7 +14,7 @@ public class Curtain { // Class is probably redundant, as we are not going to ha
         return _id;
     }
 
-    public boolean isStatus() {
+    public boolean getStatus() {
         return status;
     }
 

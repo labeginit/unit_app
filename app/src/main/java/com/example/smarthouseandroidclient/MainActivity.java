@@ -3,7 +3,6 @@ package com.example.smarthouseandroidclient;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -63,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
             for (Curtain curtain : smartHouse.getCurtainList()) {
                 inflateCurtainDevice(curtain);
             }
-            for (Thermometer thermometer : smartHouse.getTemperatureSensorList()) {
+            for (Thermometer thermometer : smartHouse.getThermometerList()) {
                 inflateTemperatureSensorDevice(thermometer);
             }
 
@@ -81,9 +80,9 @@ public class MainActivity extends AppCompatActivity {
         Button lampRowButton = (Button) lampRow.findViewById(R.id.lampRowButton);
         buttons.put(lamp.get_id(), lampRowButton);
         lampRowName.setText(lamp.get_id());
-        if (lamp.isStatus()) {
+        if (lamp.getStatus()) {
             lampRowButton.setText("ON");
-        } else if (!lamp.isStatus()) {
+        } else if (!lamp.getStatus()) {
             lampRowButton.setText("OFF");
         }
         lampRowButton.setOnClickListener(v -> {
@@ -125,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
         Button curtainRowButton = (Button) curtainRow.findViewById(R.id.curtainRowButton);
         buttons.put(curtain.get_id(), curtainRowButton);
         curtainRowName.setText(curtain.get_id());
-        if (curtain.isStatus()) {
+        if (curtain.getStatus()) {
             curtainRowButton.setText("OPEN");
         } else {
             curtainRowButton.setText("CLOSED");
@@ -354,7 +353,6 @@ public class MainActivity extends AppCompatActivity {
                             webSocketClient.send("changeDeviceStatus={'_id':'" + alarmID + "', 'status':'" + 0 + "'}"); // The alarm is turned off.
                             Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'\" + alarmID + \"', 'status':'\" + 0 + \"'}");
                         })
-
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
             });

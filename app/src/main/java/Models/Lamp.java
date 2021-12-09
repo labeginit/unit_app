@@ -14,7 +14,7 @@ public class Lamp {
         return _id;
     }
 
-    public boolean isStatus() {
+    public boolean getStatus() {
         return status;
     }
 
