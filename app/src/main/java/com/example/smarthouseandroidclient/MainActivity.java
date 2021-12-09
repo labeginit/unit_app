@@ -2,9 +2,14 @@ package com.example.smarthouseandroidclient;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +39,7 @@ import Models.SmartHouse;
 import Models.Thermometer;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String CHANNEL_ID = "Alarm notification";
     private WebSocketClient webSocketClient;
     private SmartHouse smartHouse = SmartHouse.getInstance();
     private LinearLayout deviceLayout;
@@ -47,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
+        createNotificationChannel();
     }
 
     @Override
@@ -68,14 +75,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        webSocketClient.close();
+        //webSocketClient.close();
         Log.d("Websocket", "Application paused");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        webSocketClient.close();
+        //webSocketClient.close();
         Log.d("Websocket", "Application stopped");
     }
 
@@ -99,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
             for (Alarm alarm : smartHouse.getAlarmList()) {
                 inflateAlarmDevice(alarm);
             }
+
+            // TODO Check if alarm is activated at start
         }
     }
 
@@ -194,8 +203,11 @@ public class MainActivity extends AppCompatActivity {
         alarmRowName.setText(alarm.get_id());
         if (alarm.getStatus() == 0) {
             alarmRowButton.setText("OFF");
-        } else if (alarm.getStatus() == 1 || alarm.getStatus() == 2) { // If the alarm is going off it must be ON in the first place
+        } else if (alarm.getStatus() == 1) { // If the alarm is going off it must be ON in the first place
             alarmRowButton.setText("ON");
+        } else if (alarm.getStatus() == 2) {
+            alarmRowButton.setText("ON");
+            // TODO Show alert!
         }
         alarmRowButton.setOnClickListener(v -> {
             if (alarmRowButton.getText().equals("ON")) {
@@ -306,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCloseReceived() {
-                Log.i("WebSocket", "Closed ");
+                Log.d("Websocket", "Closed ");
             }
         };
         webSocketClient.setConnectTimeout(10000);
@@ -381,7 +393,7 @@ public class MainActivity extends AppCompatActivity {
             // TODO TEST BELOW CODE
         } else if (newAlarmStatus == 2) { // We get information about the alarm being triggered
             runOnUiThread(() -> {
-                new AlertDialog.Builder(getApplicationContext())
+                new AlertDialog.Builder(getApplicationContext()) // shows an alert if the application is open
                         .setTitle("Alarm triggered!")
                         .setMessage("Would you like to call security?")
 
@@ -399,9 +411,38 @@ public class MainActivity extends AppCompatActivity {
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)   // The code below builds a notification that informs the user that the alarm is triggered, even if app is in stopped / paused.
+                        .setSmallIcon(R.drawable.alarm_icon)
+                        .setContentTitle("Alarm going off!")
+                        .setContentText("The alarm is triggered in your house!")
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setAutoCancel(true);
+
+                NotificationManagerCompat managerCompat = NotificationManagerCompat.from(MainActivity.this);
+                managerCompat.notify(1, builder.build());
+
+
+
             });
         }
     }
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "NotificationChannel";
+            String description = "Channel for creating alarm notifications to the user.";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
 
 
 }
