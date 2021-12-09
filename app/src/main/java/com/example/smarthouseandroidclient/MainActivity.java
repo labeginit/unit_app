@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private SmartHouse smartHouse = SmartHouse.getInstance();
     private LinearLayout deviceLayout;
     private String errorTag = "Errors";
-    private HashMap<String, Button> buttons = new HashMap<>();
+    private HashMap<String, Button> buttons = new HashMap<>(); // Hashmap storing all buttons in the GUI
+    private HashMap<String, TextView> textViews = new HashMap<>(); // Hashmap containing all textviews, such as the ones for showing temperature for thermometers
     private Slider fanSliderGlobal;
 
     @Override
@@ -178,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
         TextView temperatureSensorTemperature = (TextView) temperatureSensorRow.findViewById(R.id.temperature);
         temperatureSensorName.setText(thermometer.get_id());
         temperatureSensorTemperature.setText(Double.toString(thermometer.getStatus()));
+        textViews.put(thermometer.get_id(), temperatureSensorTemperature);
 
         deviceLayout.addView(temperatureSensorRow);
     }
@@ -259,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                                 } else if (jsonObject.get("device").toString().equals("alarm")) {
                                     updateAlarmInGUI(jsonObject);
                                 } else if (jsonObject.get("device").toString().equals("thermometer")) {
-                                    // TODO
+                                    updateThermometerInGUI(jsonObject);
                                 }
                             } else {
                                 runOnUiThread(() -> {
@@ -274,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
 
                     default:
                         runOnUiThread(() -> {   // Display the message by using the GUI thread
-                            Toast.makeText(getApplicationContext(), "Unknown operation", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Unknown operation", Toast.LENGTH_SHORT).show(); // Server sends an operation that isn't supported in protocol / faulty message.
                         });
                         break;
                 }
@@ -348,9 +350,18 @@ public class MainActivity extends AppCompatActivity {
         int newFanSpeed = Integer.parseInt(jsonObject.get("option").toString());
         Log.d("Websocket", "Fan name: " + fanID + " " + "New status: " + newFanSpeed);
 
+
+    }
+
+    private void updateThermometerInGUI(JSONObject jsonObject) throws JSONException {
+        String thermometerID = jsonObject.get("_id").toString();
+        double newTemperature = Double.parseDouble(jsonObject.get("option").toString());
+        Log.d("Websocket", "Thermometer name: " + thermometerID + " New status: " + newTemperature);
+
         runOnUiThread(() -> {
-            fanSliderGlobal.setValue(newFanSpeed);
+            textViews.get(thermometerID).setText(String.valueOf(newTemperature)); // Retrieve the correct textview and update temperature
         });
+
     }
 
     // TODO updateAlarmInGUI isn't tested as server isn't broadcasting at the time of implementation
