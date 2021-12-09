@@ -107,7 +107,27 @@ public class MainActivity extends AppCompatActivity {
                 inflateAlarmDevice(alarm);
                 displayAlarmAlert(alarm.get_id());
             }
+
         }
+        inflateAddNewDevice();
+    }
+
+    private void inflateAddNewDevice(){
+        View newDeviceRow = getLayoutInflater().inflate(R.layout.new_device_row, null, false);
+
+        ImageView newDeviceRowImage = (ImageView) newDeviceRow.findViewById(R.id.newDeviceRowImage);
+        TextView newDeviceRowName = (TextView) newDeviceRow.findViewById(R.id.newDeviceRowName);
+        Button newDeviceRowButton = (Button) newDeviceRow.findViewById(R.id.newDeviceRowButton);
+        buttons.put(null, newDeviceRowButton);
+
+        newDeviceRowButton.setOnClickListener(v ->{
+
+            //Öppna ny Activity?
+            Toast.makeText(MainActivity.this, "Add a new device", Toast.LENGTH_SHORT).show();
+
+
+        });
+        deviceLayout.addView(newDeviceRow);
     }
 
     private void inflateLampDevice(Lamp lamp) {
