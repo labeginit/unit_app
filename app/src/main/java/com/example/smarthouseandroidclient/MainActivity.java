@@ -105,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
 
             for (Alarm alarm : smartHouse.getAlarmList()) {
                 inflateAlarmDevice(alarm);
-                displayAlarmAlert(alarm.get_id());
             }
 
         }
