@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import org.json.JSONObject;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Objects;
 
 import Models.Curtain;
 import Models.Fan;
@@ -46,13 +48,14 @@ public class MainActivity extends AppCompatActivity {
     private String errorTag = "Errors";
     private HashMap<String, Button> buttons = new HashMap<>(); // Hashmap storing all buttons in the GUI
     private HashMap<String, TextView> textViews = new HashMap<>(); // Hashmap containing all textviews, such as the ones for showing temperature for thermometers
+    private HashMap<String, View> deviceViews = new HashMap<>();
     private Slider fanSliderGlobal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportActionBar().hide();
+        Objects.requireNonNull(getSupportActionBar()).hide();
         createNotificationChannel();
     }
 
@@ -100,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 inflateCurtainDevice(curtain);
             }
             for (Thermometer thermometer : smartHouse.getThermometerList()) {
-                inflateTemperatureSensorDevice(thermometer);
+                inflateThermometerDevice(thermometer);
             }
 
             for (Alarm alarm : smartHouse.getAlarmList()) {
@@ -112,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void inflateAddNewDevice(){
-        View newDeviceRow = getLayoutInflater().inflate(R.layout.new_device_row, null, false);
+        @SuppressLint("InflateParams") View newDeviceRow = getLayoutInflater().inflate(R.layout.new_device_row, null, false);
 
         ImageView newDeviceRowImage = (ImageView) newDeviceRow.findViewById(R.id.newDeviceRowImage);
         TextView newDeviceRowName = (TextView) newDeviceRow.findViewById(R.id.newDeviceRowName);
@@ -123,8 +126,19 @@ public class MainActivity extends AppCompatActivity {
 
             //Öppna ny Activity?
             Toast.makeText(MainActivity.this, "Add a new device", Toast.LENGTH_SHORT).show();
+            // TODO Open new activity that takes deviceId and deviceType from user and sends appropriate addNewDevice string to server.
+             // Example of how to add a new device with correct server endpoint
+            /*
+            webSocketClient.send("addNewDevice={_id:DummyId,device:lamp}");
+            Log.d("Websocket", "Command sent to server: addNewDevice={_id:DummyId,device:lamp}");
+             */
 
-
+            // TODO Add functionality to remove a device from the GUI
+             // Example of how a device is removed in database and then removed from GUI
+            /*
+            webSocketClient.send("removeDevice={_id:DummyId,device:lamp}");
+            Log.d("Websocket", "Command sent to server: removeDevice={_id:DummyId,device:lamp}");
+             */
         });
         deviceLayout.addView(newDeviceRow);
     }
@@ -151,7 +165,17 @@ public class MainActivity extends AppCompatActivity {
                 webSocketClient.send("changeDeviceStatus={'_id':'" + lamp.get_id() + "', 'status':'true'}");
             }
         });
+
+        lampRow.setOnLongClickListener(v -> { // Listens if the row is long-pressed
+            runOnUiThread(() -> {
+                Toast.makeText(getApplicationContext(), "Lamp long pressed", Toast.LENGTH_SHORT).show();
+                // TODO ASK user if the long-pressed device should be removed or not.
+                 //webSocketClient.send("removeDevice={_id:" + lamp.get_id() + ",device:lamp}");  If yes
+            });
+            return true;
+        });
         deviceLayout.addView(lampRow);
+        deviceViews.put(lamp.get_id(), lampRow);
     }
 
     private void inflateFanDevice(Fan fan) {
@@ -171,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         deviceLayout.addView(fanRow);
+        deviceViews.put(fan.get_id(), fanRow);
     }
 
     private void inflateCurtainDevice(Curtain curtain) {
@@ -196,19 +221,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         deviceLayout.addView(curtainRow);
+        deviceViews.put(curtain.get_id(), curtainRow);
     }
 
-    private void inflateTemperatureSensorDevice(Thermometer thermometer) {
-        View temperatureSensorRow = getLayoutInflater().inflate(R.layout.temperature_sensor_row, null, false);
+    private void inflateThermometerDevice(Thermometer thermometer) {
+        View thermometerRow = getLayoutInflater().inflate(R.layout.temperature_sensor_row, null, false);
 
-        ImageView temperatureRowImage = (ImageView) temperatureSensorRow.findViewById(R.id.temperatureSensorImage);
-        TextView temperatureSensorName = (TextView) temperatureSensorRow.findViewById(R.id.temperatureSensorName);
-        TextView temperatureSensorTemperature = (TextView) temperatureSensorRow.findViewById(R.id.temperature);
+        ImageView temperatureRowImage = (ImageView) thermometerRow.findViewById(R.id.temperatureSensorImage);
+        TextView temperatureSensorName = (TextView) thermometerRow.findViewById(R.id.temperatureSensorName);
+        TextView temperatureSensorTemperature = (TextView) thermometerRow.findViewById(R.id.temperature);
         temperatureSensorName.setText(thermometer.get_id());
         temperatureSensorTemperature.setText(Double.toString(thermometer.getStatus()));
         textViews.put(thermometer.get_id(), temperatureSensorTemperature);
 
-        deviceLayout.addView(temperatureSensorRow);
+        deviceLayout.addView(thermometerRow);
+        deviceViews.put(thermometer.get_id(), thermometerRow);
     }
 
     private void inflateAlarmDevice(Alarm alarm) {
@@ -237,13 +264,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         deviceLayout.addView(alarmRow);
+        deviceViews.put(alarm.get_id(), alarmRow);
     }
 
     private void createWebSocketClient() {
         URI uri;
         try {
-            uri = new URI("ws://ro01.beginit.se:1337/websocket");
-            // ws://ro01.beginit.se:1337/websocket
+            uri = new URI("ws://194.47.44.10:1337/websocket");
+            // ws://ro01.beginit.se:1337/websocket Lillia server
             // ws://192.168.1.14:8080/websocket
         } catch (URISyntaxException e) {
             Log.e(errorTag, "Failed to create URI");
@@ -305,7 +333,73 @@ public class MainActivity extends AppCompatActivity {
                         break;
 
                     case "changeDeviceStatus2Device" :
-                            // This is ignored for Units clients.
+                            // This is ignored for Units clients, but handled by devices
+                        break;
+
+                    case "addNewDevice": // We recieve a broadcast that a new device has been successfully added
+                        try {
+                            jsonObject = new JSONObject(payload);
+                            if (jsonObject.get("operation").toString().equals("success")) {
+
+                                String deviceId = jsonObject.getString("_id");
+
+                                if (jsonObject.get("device").toString().equals("lamp")) { // A lamp has been successfully added
+                                    smartHouse.getLampList().add(new Lamp(deviceId, Boolean.parseBoolean(jsonObject.get("status").toString())));
+                                } else if (jsonObject.get("device").toString().equals("curtain")) {
+                                    smartHouse.getCurtainList().add(new Curtain(deviceId, Boolean.parseBoolean(jsonObject.get("status").toString())));
+                                } else if (jsonObject.get("device").toString().equals("fan")) {
+                                    smartHouse.getFanList().add(new Fan(deviceId, Integer.parseInt(jsonObject.get("status").toString())));
+                                } else if (jsonObject.get("device").toString().equals("alarm")) {
+                                    smartHouse.getAlarmList().add(new Alarm(deviceId, Integer.parseInt(jsonObject.get("status").toString())));
+                                } else if (jsonObject.get("device").toString().equals("thermometer")) {
+                                    smartHouse.getThermometerList().add(new Thermometer(deviceId, Double.parseDouble(jsonObject.get("status").toString())));
+                                }
+                                Log.d("Websocket", jsonObject.get("_id").toString() + " has been added!");
+                                runOnUiThread(() -> { // Remove and re-inflate the devices to have them sorted in device order
+                                    deviceLayout.removeAllViews();
+                                    inflateDevices();
+                                });
+
+                            } else if (jsonObject.get("operation").toString().equals("failed")) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(getApplicationContext(), "Failed to add device", Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+
+                    case "removeDevice": // We receive a broadcast that a device has been successfully removed
+                        try {
+                            jsonObject = new JSONObject(payload);
+                            if (jsonObject.get("operation").toString().equals("success")) {
+                                String deviceId = jsonObject.getString("_id");
+
+                                if (jsonObject.get("device").toString().equals("lamp")) { // A lamp has been successfully added
+                                    smartHouse.getLampList().removeIf(lamp -> lamp.get_id().equals(deviceId));
+                                } else if (jsonObject.get("device").toString().equals("curtain")) {
+                                    smartHouse.getCurtainList().removeIf(curtain -> curtain.get_id().equals(deviceId));
+                                } else if (jsonObject.get("device").toString().equals("fan")) {
+                                    smartHouse.getFanList().removeIf(fan -> fan.get_id().equals(deviceId));
+                                } else if (jsonObject.get("device").toString().equals("alarm")) {
+                                    smartHouse.getAlarmList().removeIf(alarm -> alarm.get_id().equals(deviceId));
+                                } else if (jsonObject.get("device").toString().equals("thermometer")) {
+                                    smartHouse.getThermometerList().removeIf(thermometer -> thermometer.get_id().equals(deviceId));
+                                }
+                                runOnUiThread(() -> { // Remove and re-inflate the devices to have them sorted in device order
+                                    deviceLayout.removeAllViews();
+                                    inflateDevices();
+                                });
+                                Log.d("Websocket", jsonObject.getString("_id") + " has been removed.");
+                            } else if (jsonObject.get("operation").toString().equals("failed")) {
+                                runOnUiThread(() -> {   // Display the message by using the GUI thread
+                                    Toast.makeText(getApplicationContext(), "Failed to remove device", Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                         break;
 
                     default:
@@ -350,7 +444,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLampInGUI(JSONObject jsonObject) throws JSONException {
         String lampID = jsonObject.get("_id").toString();
-        boolean newLampStatus = Boolean.parseBoolean(jsonObject.get("option").toString());
+        boolean newLampStatus = Boolean.parseBoolean(jsonObject.get("status").toString());
         Log.d("Websocket", "Lamp name: " + lampID + " " + "New status: " + newLampStatus);
         if (newLampStatus) { // true
             runOnUiThread(() -> {   // Display the message by using the GUI thread
@@ -365,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateCurtainInGUI(JSONObject jsonObject) throws JSONException {
         String curtainID = jsonObject.get("_id").toString();
-        boolean newCurtainStatus = Boolean.parseBoolean(jsonObject.get("option").toString());
+        boolean newCurtainStatus = Boolean.parseBoolean(jsonObject.get("status").toString());
         Log.d("Websocket", "Curtain name: " + curtainID + " " + "New status: " + newCurtainStatus);
 
         if (newCurtainStatus) { // true
@@ -381,7 +475,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateFanInGUI(JSONObject jsonObject) throws JSONException {
         String fanID = jsonObject.get("_id").toString();
-        int newFanSpeed = Integer.parseInt(jsonObject.get("option").toString());
+        int newFanSpeed = Integer.parseInt(jsonObject.get("status").toString());
         Log.d("Websocket", "Fan name: " + fanID + " " + "New status: " + newFanSpeed);
 
 
@@ -389,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateThermometerInGUI(JSONObject jsonObject) throws JSONException {
         String thermometerID = jsonObject.get("_id").toString();
-        double newTemperature = Double.parseDouble(jsonObject.get("option").toString());
+        double newTemperature = Double.parseDouble(jsonObject.get("status").toString());
         Log.d("Websocket", "Thermometer name: " + thermometerID + " New status: " + newTemperature);
 
         runOnUiThread(() -> {
@@ -401,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
     // TODO updateAlarmInGUI isn't tested as server isn't broadcasting at the time of implementation
     private void updateAlarmInGUI(JSONObject jsonObject) throws JSONException {
         String alarmID = jsonObject.get("_id").toString();
-        int newAlarmStatus = Integer.parseInt(jsonObject.get("option").toString()); // Read in the status sent from the server
+        int newAlarmStatus = Integer.parseInt(jsonObject.get("status").toString()); // Read in the status sent from the server
         Log.d("Websocket", "Alarm name: " + alarmID + " " + "New status: " + newAlarmStatus);
 
         if (newAlarmStatus == 0) { // The new status of the Alarm is OFF
