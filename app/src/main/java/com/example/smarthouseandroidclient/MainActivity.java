@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
                                 });
                             }
                         } catch (JSONException e) {
-                            Log.d("Websocket", "JSON error!");
+                            Log.d("Websocket", e.getMessage());
                         }
 
                         break;
