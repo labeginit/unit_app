@@ -8,13 +8,16 @@ import androidx.core.app.NotificationManagerCompat;
 import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -31,6 +34,7 @@ import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -50,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, TextView> textViews = new HashMap<>(); // Hashmap containing all textviews, such as the ones for showing temperature for thermometers
     private HashMap<String, View> deviceViews = new HashMap<>();
     private Slider fanSliderGlobal;
+    private int penis = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (deviceLayout != null)
-        deviceLayout.removeAllViews();
+            deviceLayout.removeAllViews();
         createWebSocketClient();
         Log.d("Websocket", "Application resumed");
     }
@@ -114,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         inflateAddNewDevice();
     }
 
-    private void inflateAddNewDevice(){
+    private void inflateAddNewDevice() {
         @SuppressLint("InflateParams") View newDeviceRow = getLayoutInflater().inflate(R.layout.new_device_row, null, false);
 
         ImageView newDeviceRowImage = (ImageView) newDeviceRow.findViewById(R.id.newDeviceRowImage);
@@ -122,19 +127,54 @@ public class MainActivity extends AppCompatActivity {
         Button newDeviceRowButton = (Button) newDeviceRow.findViewById(R.id.newDeviceRowButton);
         buttons.put(null, newDeviceRowButton);
 
-        newDeviceRowButton.setOnClickListener(v ->{
+        newDeviceRowButton.setOnClickListener(v -> {
 
-            //Öppna ny Activity?
-            Toast.makeText(MainActivity.this, "Add a new device", Toast.LENGTH_SHORT).show();
-            // TODO Open new activity that takes deviceId and deviceType from user and sends appropriate addNewDevice string to server.
-             // Example of how to add a new device with correct server endpoint
+            EditText inputField = new EditText(this); // Edittext displayed in the dialog later
+            inputField.setTextSize(22);
+            inputField.setTextColor(Color.WHITE);
+            inputField.setHintTextColor(Color.GRAY);
+            inputField.setHint("Enter device ID here:");
+            inputField.setPadding(100, 40, 100, 40);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_AppCompat_Dialog_Alert);
+            String[] deviceList = {"Lamp", "Fan", "Thermometer", "Alarm"};
+            final int[] selectedDevice = {0};
+            builder.setTitle("Add new device")
+                    .setSingleChoiceItems(deviceList, selectedDevice[0], new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            selectedDevice[0] = which;
+                        }
+                    })
+                    .setView(inputField)
+                    .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (!inputField.getText().toString().equals("") && inputField.getText().length() > 3) { // Make sure inputfield contains some kind of ID.
+                                runOnUiThread(() -> {   // Task the UI thread to inflate the devices
+                                    // TODO webSocketClient.send("addNewDevice={_id:" + inputField.getText() + ",device:" + deviceList[selectedDevice[0]]+"}");
+                                    Log.d("Websocket", "Command sent to server: addNewDevice={_id:" + inputField.getText() + ",device:"+ deviceList[selectedDevice[0]].toLowerCase()+"}");
+                                });
+                            }
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Do nothing
+                        }
+                    })
+                    .show();
+
+
+            // Example of how to add a new device with correct server endpoint
             /*
             webSocketClient.send("addNewDevice={_id:DummyId,device:lamp}");
             Log.d("Websocket", "Command sent to server: addNewDevice={_id:DummyId,device:lamp}");
              */
 
-            // TODO Add functionality to remove a device from the GUI
-             // Example of how a device is removed in database and then removed from GUI
+
+            // Example of how a device is removed in database and then removed from GUI
             /*
             webSocketClient.send("removeDevice={_id:DummyId,device:lamp}");
             Log.d("Websocket", "Command sent to server: removeDevice={_id:DummyId,device:lamp}");
@@ -142,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
         });
         deviceLayout.addView(newDeviceRow);
     }
+
 
     private void inflateLampDevice(Lamp lamp) {
         View lampRow = getLayoutInflater().inflate(R.layout.lamp_row, null, false);
@@ -167,13 +208,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         lampRow.setOnLongClickListener(v -> { // Listens if the row is long-pressed
-            runOnUiThread(() -> {
-                Toast.makeText(getApplicationContext(), "Lamp long pressed", Toast.LENGTH_SHORT).show();
-                // TODO ASK user if the long-pressed device should be removed or not.
-                 //webSocketClient.send("removeDevice={_id:" + lamp.get_id() + ",device:lamp}");  If yes
-            });
+            runOnUiThread(() -> removeDeviceAlert(lamp.get_id(), "lamp"));
             return true;
         });
+
         deviceLayout.addView(lampRow);
         deviceViews.put(lamp.get_id(), lampRow);
     }
@@ -194,6 +232,11 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
+        fanRow.setOnLongClickListener(v -> { // Listens if the row is long-pressed
+            runOnUiThread(() -> removeDeviceAlert(fan.get_id(), "fan"));
+            return true;
+        });
+
         deviceLayout.addView(fanRow);
         deviceViews.put(fan.get_id(), fanRow);
     }
@@ -211,6 +254,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             curtainRowButton.setText("CLOSED");
         }
+
         curtainRowButton.setOnClickListener(v -> {
             if (curtainRowButton.getText().equals("OPEN")) {
                 Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'status':'" + false + "'}");
@@ -220,6 +264,12 @@ public class MainActivity extends AppCompatActivity {
                 webSocketClient.send("changeDeviceStatus={'_id':'" + curtain.get_id() + "', 'status':'" + true + "'}");
             }
         });
+
+        curtainRow.setOnLongClickListener(v -> { // Listens if the row is long-pressed
+            runOnUiThread(() -> removeDeviceAlert(curtain.get_id(), "curtain"));
+            return true;
+        });
+
         deviceLayout.addView(curtainRow);
         deviceViews.put(curtain.get_id(), curtainRow);
     }
@@ -233,6 +283,11 @@ public class MainActivity extends AppCompatActivity {
         temperatureSensorName.setText(thermometer.get_id());
         temperatureSensorTemperature.setText(Double.toString(thermometer.getStatus()));
         textViews.put(thermometer.get_id(), temperatureSensorTemperature);
+
+        thermometerRow.setOnLongClickListener(v -> { // Listens if the row is long-pressed
+            runOnUiThread(() -> removeDeviceAlert(thermometer.get_id(), "thermometer"));
+            return true;
+        });
 
         deviceLayout.addView(thermometerRow);
         deviceViews.put(thermometer.get_id(), thermometerRow);
@@ -254,6 +309,7 @@ public class MainActivity extends AppCompatActivity {
             alarmRowButton.setText("ON");
             displayAlarmAlert(alarm.get_id());
         }
+
         alarmRowButton.setOnClickListener(v -> {
             if (alarmRowButton.getText().equals("ON")) {
                 Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':' " + 0 + "'}"); // If the alarm is ON we send 0 to turn it OFF
@@ -263,14 +319,36 @@ public class MainActivity extends AppCompatActivity {
                 webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 1 + "'}");
             }
         });
+
+        alarmRow.setOnLongClickListener(v -> { // Listens if the row is long-pressed
+            runOnUiThread(() -> removeDeviceAlert(alarm.get_id(), "alarm"));
+            return true;
+        });
+
         deviceLayout.addView(alarmRow);
         deviceViews.put(alarm.get_id(), alarmRow);
+    }
+
+    private void removeDeviceAlert(String deviceId, String deviceType) { // Where the remove request is sent to server
+        new AlertDialog.Builder(this, R.style.Theme_AppCompat_Dialog_Alert)
+                .setTitle("Removing " + deviceId + " !")
+                .setMessage("Are you sure you want to remove the device?")
+                .setPositiveButton(android.R.string.yes, (dialog, which) -> { // The user wants to remove the device
+                    // TODO webSocketClient.send("removeDevice={_id:" + deviceId + ",device:deviceType}");  If yes
+                    Log.d("Websocket", "Command sent to server: " + "removeDevice={_id:" + deviceId + ",device:" + deviceType + "}");
+                })
+
+                .setNegativeButton(android.R.string.no, (dialog, which) -> { // The user doesn't want to remove device
+                    // Do nothing
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
     private void createWebSocketClient() {
         URI uri;
         try {
-            uri = new URI("ws://194.47.44.10:1337/websocket");
+            uri = new URI("ws://ro01.beginit.se:1337/websocket");
             // ws://ro01.beginit.se:1337/websocket Lillia server
             // ws://192.168.1.14:8080/websocket
         } catch (URISyntaxException e) {
@@ -293,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
                 String payload = parts[1];
 
                 switch (operation) {
-                    case "getDevices":
+                    case "getDevices": // Handle getDevices response
                         Gson gson = new Gson();
                         smartHouse = gson.fromJson(payload, SmartHouse.class);
                         Log.d("Websocket", "SmartHouse now loaded!");
@@ -303,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
                         });
                         break;
 
-                    case "changeDeviceStatus":
+                    case "changeDeviceStatus": // Handle changeDeviceStatus response
                         Log.d("Websocket", "Payload: " + payload + " ");
 
                         JSONObject jsonObject;
@@ -332,8 +410,8 @@ public class MainActivity extends AppCompatActivity {
 
                         break;
 
-                    case "changeDeviceStatus2Device" :
-                            // This is ignored for Units clients, but handled by devices
+                    case "changeDeviceStatus2Device":
+                        // This is ignored for Units clients, but handled by devices
                         break;
 
                     case "addNewDevice": // We recieve a broadcast that a new device has been successfully added
@@ -509,7 +587,7 @@ public class MainActivity extends AppCompatActivity {
             // TODO TEST BELOW CODE
         } else if (newAlarmStatus == 2) { // We get information about the alarm being triggered
             runOnUiThread(() -> {
-               displayAlarmAlert(alarmID);
+                displayAlarmAlert(alarmID);
 
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)   // The code below builds a notification that informs the user that the alarm is triggered, even if app is in stopped / paused.
                         .setSmallIcon(R.drawable.alarm_icon)
@@ -525,7 +603,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displayAlarmAlert(String alarmID) {
-        new AlertDialog.Builder(this) // shows an alert if the application is open
+        new AlertDialog.Builder(this, R.style.Theme_AppCompat_Dialog_Alert) // shows an alert if the application is open
                 .setTitle("Alarm triggered!")
                 .setMessage("Would you like to call security?")
 
@@ -544,6 +622,7 @@ public class MainActivity extends AppCompatActivity {
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
     }
+
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
@@ -559,7 +638,6 @@ public class MainActivity extends AppCompatActivity {
             notificationManager.createNotificationChannel(channel);
         }
     }
-
 
 
 }
