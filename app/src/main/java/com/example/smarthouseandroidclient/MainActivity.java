@@ -9,6 +9,8 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -58,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, View> deviceViews = new HashMap<>();
     private Slider fanSliderGlobal;
     private LifeCycle lifeCycle;
+    private Uri notificationSound;
 
     private enum LifeCycle {
         RESUMED,
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).hide();
         createNotificationChannel();
         createWebSocketClient();
+        notificationSound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + this.getPackageName() + "/" + R.raw.air_horn); // Sets the notification sound to air_horn.mp3 file in raw folder
     }
 
     @Override
@@ -311,8 +315,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':' " + 0 + "'}"); // If the alarm is ON we send 0 to turn it OFF
                 webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 0 + "'}");
             } else if (alarmRowButton.getText().equals("OFF")) {
-                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 2 + "'}"); // If the alarm is OFF we send 1 to turn it ON
-                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 2 + "'}");
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 1 + "'}"); // If the alarm is OFF we send 1 to turn it ON
+                webSocketClient.send("changeDeviceStatus={'_id':'" + alarm.get_id() + "', 'status':'" + 1 + "'}");
             }
         });
 
@@ -344,7 +348,7 @@ public class MainActivity extends AppCompatActivity {
     private void createWebSocketClient() {
         URI uri;
         try {
-            uri = new URI("ws://192.168.1.32:8080/websocket");
+            uri = new URI("ws:///ro01.beginit.se:1337/websocket");
             // ws://ro01.beginit.se:1337/websocket Lillia server
             // ws://192.168.1.14:8080/websocket
             // ws://172.20.10.7:8080/websocket
@@ -607,12 +611,13 @@ public class MainActivity extends AppCompatActivity {
                 if (lifeCycle == LifeCycle.RESUMED) {
                     displayAlarmAlert(alarmID);
                 } else if (lifeCycle == LifeCycle.PAUSED || lifeCycle == LifeCycle.STOPPED) {
-                    Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notificationSound); // Use the RingtoneManager to play the airhorn sound when the notification is triggered.
+                    r.play();
                     NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)   // The code below builds a notification that informs the user that the alarm is triggered, even if app is in stopped / paused.
                             .setSmallIcon(R.drawable.alarm_icon)
                             .setContentTitle("Alarm going off!")
                             .setContentText("The alarm is triggered in your house!")
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
                             .setAutoCancel(true);
                     NotificationManagerCompat managerCompat = NotificationManagerCompat.from(MainActivity.this);
                     managerCompat.notify(1, builder.build());
