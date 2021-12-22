@@ -348,7 +348,8 @@ public class MainActivity extends AppCompatActivity {
     private void createWebSocketClient() {
         URI uri;
         try {
-            uri = new URI("ws:///ro01.beginit.se:1337/websocket");
+//            uri = new URI("ws:///ro01.beginit.se:1337/websocket");
+            uri = new URI("ws://ro01.beginit.se:1337/websocket");
             // ws://ro01.beginit.se:1337/websocket Lillia server
             // ws://192.168.1.14:8080/websocket
             // ws://172.20.10.7:8080/websocket
