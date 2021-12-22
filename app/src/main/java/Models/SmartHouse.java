@@ -11,6 +11,7 @@ public class SmartHouse {
     ArrayList<Curtain> curtainList;
     ArrayList<Thermometer> temperatureSensorList;
     ArrayList<Alarm> alarmList;
+    ArrayList<Heater> heaterList;
 
     public void clear() {
         lampList.clear();
@@ -18,6 +19,7 @@ public class SmartHouse {
         curtainList.clear();
         temperatureSensorList.clear();
         alarmList.clear();
+        heaterList.clear();
     }
 
 
@@ -27,6 +29,7 @@ public class SmartHouse {
         curtainList = new ArrayList<>();
         temperatureSensorList = new ArrayList<>();
         alarmList = new ArrayList<>();
+        heaterList = new ArrayList<>();
     }
 
     public static SmartHouse getInstance() {
@@ -54,6 +57,8 @@ public class SmartHouse {
 
     public ArrayList<Alarm> getAlarmList(){ return alarmList; }
 
+    public ArrayList<Heater> getHeaterList(){ return heaterList; }
+
     public void addLamp(Lamp lamp) {
         this.lampList.add(lamp);
     }
@@ -70,6 +75,8 @@ public class SmartHouse {
 
     public void addAlarm(Alarm alarm){ this.alarmList.add(alarm); }
 
+    public void addHeater(Heater heater){ this.heaterList.add(heater); }
+
     public int getNumberOfDevices() {
         int deviceTotal = 0;
 
@@ -78,6 +85,7 @@ public class SmartHouse {
         deviceTotal += getCurtainList().size();
         deviceTotal += getThermometerList().size();
         deviceTotal += getAlarmList().size();
+        deviceTotal += getHeaterList().size();
 
         return deviceTotal;
     }
@@ -90,6 +98,7 @@ public class SmartHouse {
                 ", curtainList=" + curtainList +
                 ", temperatureSensorList=" + temperatureSensorList +
                 ", alarmList=" + alarmList +
+                ", heaterList=" + heaterList +
                 '}';
     }
 }

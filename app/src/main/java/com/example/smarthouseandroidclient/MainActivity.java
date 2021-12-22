@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import Models.Alarm;
+import Models.Heater;
 import tech.gusavila92.websocketclient.WebSocketClient;
 
 import com.google.android.material.slider.Slider;
@@ -124,7 +125,9 @@ public class MainActivity extends AppCompatActivity {
             for (Thermometer thermometer : smartHouse.getThermometerList()) {
                 inflateThermometerDevice(thermometer);
             }
-
+            for (Heater heater : smartHouse.getHeaterList()) {
+                inflateHeaterDevice(heater);
+            }
             for (Alarm alarm : smartHouse.getAlarmList()) {
                 inflateAlarmDevice(alarm);
             }
@@ -183,6 +186,37 @@ public class MainActivity extends AppCompatActivity {
         deviceLayout.addView(newDeviceRow);
     }
 
+    private void inflateHeaterDevice(Heater heater) {
+        View heaterRow = getLayoutInflater().inflate(R.layout.lamp_row, null, false);
+
+        ImageView lampRowImage = (ImageView) heaterRow.findViewById(R.id.heaterRowImage);
+        TextView lampRowName = (TextView) heaterRow.findViewById(R.id.heaterRowName);
+        Button lampRowButton = (Button) heaterRow.findViewById(R.id.heaterRowButton);
+        buttons.put(heater.get_id(), lampRowButton);
+        lampRowName.setText(heater.get_id());
+        if (heater.getStatus()) {
+            lampRowButton.setText("ON");
+        } else if (!heater.getStatus()) {
+            lampRowButton.setText("OFF");
+        }
+        lampRowButton.setOnClickListener(v -> {
+            if (lampRowButton.getText().equals("ON")) {
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'false'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'false'}");
+            } else if (lampRowButton.getText().equals("OFF")) {
+                Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'true'}");
+                webSocketClient.send("changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'true'}");
+            }
+        });
+
+        heaterRow.setOnLongClickListener(v -> { // Listens if the row is long-pressed
+            runOnUiThread(() -> removeDeviceAlert(heater.get_id(), "heater"));
+            return true;
+        });
+
+        deviceLayout.addView(heaterRow);
+        deviceViews.put(heater.get_id(), heaterRow);
+    }
 
     private void inflateLampDevice(Lamp lamp) {
         View lampRow = getLayoutInflater().inflate(R.layout.lamp_row, null, false);
