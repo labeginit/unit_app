@@ -189,21 +189,21 @@ public class MainActivity extends AppCompatActivity {
     private void inflateHeaterDevice(Heater heater) {
         View heaterRow = getLayoutInflater().inflate(R.layout.lamp_row, null, false);
 
-        ImageView lampRowImage = (ImageView) heaterRow.findViewById(R.id.heaterRowImage);
-        TextView lampRowName = (TextView) heaterRow.findViewById(R.id.heaterRowName);
-        Button lampRowButton = (Button) heaterRow.findViewById(R.id.heaterRowButton);
-        buttons.put(heater.get_id(), lampRowButton);
-        lampRowName.setText(heater.get_id());
+        ImageView heaterRowImage = (ImageView) heaterRow.findViewById(R.id.heaterRowImage);
+        TextView heaterRowName = (TextView) heaterRow.findViewById(R.id.heaterRowName);
+        Button heaterRowButton = (Button) heaterRow.findViewById(R.id.heaterRowButton);
+        buttons.put(heater.get_id(), heaterRowButton);
+        heaterRowName.setText(heater.get_id());
         if (heater.getStatus()) {
-            lampRowButton.setText("ON");
+            heaterRowButton.setText("ON");
         } else if (!heater.getStatus()) {
-            lampRowButton.setText("OFF");
+            heaterRowButton.setText("OFF");
         }
-        lampRowButton.setOnClickListener(v -> {
-            if (lampRowButton.getText().equals("ON")) {
+        heaterRowButton.setOnClickListener(v -> {
+            if (heaterRowButton.getText().equals("ON")) {
                 Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'false'}");
                 webSocketClient.send("changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'false'}");
-            } else if (lampRowButton.getText().equals("OFF")) {
+            } else if (heaterRowButton.getText().equals("OFF")) {
                 Log.d("Websocket", "Command sent to server: changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'true'}");
                 webSocketClient.send("changeDeviceStatus={'_id':'" + heater.get_id() + "', 'status':'true'}");
             }
