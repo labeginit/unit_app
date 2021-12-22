@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void inflateHeaterDevice(Heater heater) {
-        View heaterRow = getLayoutInflater().inflate(R.layout.lamp_row, null, false);
+        View heaterRow = getLayoutInflater().inflate(R.layout.heater_row, null, false);
 
         ImageView heaterRowImage = (ImageView) heaterRow.findViewById(R.id.heaterRowImage);
         TextView heaterRowName = (TextView) heaterRow.findViewById(R.id.heaterRowName);
