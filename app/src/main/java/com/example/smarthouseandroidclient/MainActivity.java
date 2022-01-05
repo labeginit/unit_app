@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             inputField.setPadding(100, 40, 100, 40);
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.Theme_AppCompat_Dialog_Alert);
-            String[] deviceList = {"Lamp", "Fan", "Thermometer", "Alarm"};
+            String[] deviceList = {"Lamp", "Fan", "Thermometer", "Alarm", "Heater"};
             final int[] selectedDevice = {0};
             builder.setTitle("Add new device")
                     .setSingleChoiceItems(deviceList, selectedDevice[0], new DialogInterface.OnClickListener() {
@@ -164,15 +164,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                     })
                     .setView(inputField)
-                    .setPositiveButton("Add", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (!inputField.getText().toString().equals("") && inputField.getText().length() > 3) { // Make sure inputfield contains some kind of ID.
-                                runOnUiThread(() -> {   // Task the UI thread to inflate the devices
-                                    webSocketClient.send("addNewDevice={\"_id\":\"" + inputField.getText() + "\",\"device\":\"" + deviceList[selectedDevice[0]].toLowerCase() + "\"}");
-                                    Log.d("Websocket", "Command sent to server: " + "addNewDevice={\"_id\":\"" + inputField.getText() + "\",\"device\":\"" + deviceList[selectedDevice[0]].toLowerCase() + "\"}");
-                                });
-                            }
+                    .setPositiveButton("Add", (dialog, which) -> {
+                        if (!inputField.getText().toString().equals("") && inputField.getText().length() > 3) { // Make sure inputfield contains some kind of ID.
+                            runOnUiThread(() -> {   // Task the UI thread to inflate the devices
+                                webSocketClient.send("addNewDevice={\"_id\":\"" + inputField.getText() + "\",\"device\":\"" + deviceList[selectedDevice[0]].toLowerCase() + "\"}");
+                                Log.d("Websocket", "Command sent to server: " + "addNewDevice={\"_id\":\"" + inputField.getText() + "\",\"device\":\"" + deviceList[selectedDevice[0]].toLowerCase() + "\"}");
+                            });
                         }
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -462,6 +459,8 @@ public class MainActivity extends AppCompatActivity {
                             updateAlarmInGUI(jsonObject);
                         } else if (jsonObject.get("device").toString().equals("thermometer")) {
                             updateThermometerInGUI(jsonObject);
+                        } else if (jsonObject.get("device").toString().equals("heater")) {
+                            updateHeaterInGUI(jsonObject);
                         }
                     } else {
                         runOnUiThread(() -> {
@@ -474,7 +473,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
-            private void handleAddNewDeviceResponse(String payload) {
+            private void handleAddNewDeviceResponse(String payload) { // TODO Hardcode the status instead since server doesn't provide it?
                 JSONObject jsonObject;
                 try {
                     jsonObject = new JSONObject(payload);
@@ -492,6 +491,8 @@ public class MainActivity extends AppCompatActivity {
                             smartHouse.getAlarmList().add(new Alarm(deviceId, Integer.parseInt(jsonObject.get("status").toString())));
                         } else if (jsonObject.get("device").toString().equals("thermometer")) {
                             smartHouse.getThermometerList().add(new Thermometer(deviceId, Double.parseDouble(jsonObject.get("status").toString())));
+                        } else if(jsonObject.get("device").toString().equals("heater")) {
+                            smartHouse.getHeaterList().add(new Heater(deviceId, Boolean.parseBoolean(jsonObject.get("status").toString())));
                         }
 
                         Log.d("Websocket", jsonObject.get("_id").toString() + " has been added!");
@@ -510,14 +511,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            private void handleRemoveDeviceResponse(String payload) {
+            private void handleRemoveDeviceResponse(String payload) { // TODO Search all devices for an ID match, since server doesn't provide device type.
                 JSONObject jsonObject;
                 try {
                     jsonObject = new JSONObject(payload);
                     if (jsonObject.get("operation").toString().equals("success")) {
                         String deviceId = jsonObject.getString("_id");
 
-                        if (jsonObject.get("device").toString().equals("lamp")) { // A lamp has been successfully added
+                        if (jsonObject.get("device").toString().equals("lamp")) {
                             smartHouse.getLampList().removeIf(lamp -> lamp.get_id().equals(deviceId));
                         } else if (jsonObject.get("device").toString().equals("curtain")) {
                             smartHouse.getCurtainList().removeIf(curtain -> curtain.get_id().equals(deviceId));
@@ -657,6 +658,21 @@ public class MainActivity extends AppCompatActivity {
                     NotificationManagerCompat managerCompat = NotificationManagerCompat.from(MainActivity.this);
                     managerCompat.notify(1, builder.build());
                 }
+            });
+        }
+    }
+
+    private void updateHeaterInGUI(JSONObject jsonObject) throws JSONException {
+        String heaterID = jsonObject.get("_id").toString();
+        boolean newHeaterStatus = Boolean.parseBoolean(jsonObject.get("status").toString());
+        Log.d("Websocket", "Heater name: " + heaterID + " " + "New status: " + newHeaterStatus);
+        if (newHeaterStatus) {
+            runOnUiThread(() -> {
+                buttons.get(heaterID).setText("ON");
+            });
+        } else if (!newHeaterStatus) {
+            runOnUiThread(() -> {
+                buttons.get(heaterID).setText("OFF");
             });
         }
     }
