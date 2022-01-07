@@ -41,5 +41,6 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.7'
     implementation "androidx.core:core:1.6.0"
+    androidTestImplementation 'androidx.test:rules:1.4.0-alpha05'
 
 }
